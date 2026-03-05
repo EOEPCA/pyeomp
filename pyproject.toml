@@ -52,4 +52,4 @@ documentation = "https://github.com/EOEPCA/pyeomp"
 issues = "https://github.com/EOEPCA/pyeomp/issues"
 
 [tool.setuptools.package-data]
-"pyeomp" = ["*.json", "*.txt"]
+"pyeomp.resources" = ["*.json"]
