@@ -81,6 +81,7 @@ PROCESS_EOMP_ETS = {
         'href': 'https://github.com/EOEPCA/eomp',
         'hreflang': 'en-US'
     }],
+    'jobControlOptions': ['sync-execute', 'async-execute'],
     'inputs': {
         'record': {
             'title': 'EOMP record',
