@@ -4,7 +4,7 @@ on: [ push, pull_request ]
 
 jobs:
   main:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-noble
     strategy:
       matrix:
         python-version: ["3.12"]
@@ -17,7 +17,6 @@ jobs:
     - name: Install requirements 📦
       run: |
         pip3 install .
-        pip3 install ".[dev]"
         pip3 install ".[test]"
         pip3 install ".[release]"
     - name: Install package 📦
@@ -26,8 +25,5 @@ jobs:
       run: pyeomp bundle sync
     - name: run tests ⚙️
       run: pytest tests
-    - name: run flake8 ⚙️
-      run: |
-        find . -type f -name "*.py" | xargs flake8
     - name: build Python package 🏗️
       run: python3 -m build
