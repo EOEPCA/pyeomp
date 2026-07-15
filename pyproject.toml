@@ -34,6 +34,7 @@ dependencies = [
     "jsonschema",
     "rfc3339-validator",
     "rfc3987",
+    "requests",
     "shapely"
 ]
 

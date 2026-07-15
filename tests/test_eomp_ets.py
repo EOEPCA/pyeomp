@@ -29,7 +29,7 @@ from .util import get_test_file_path
 
 
 @pytest.mark.parametrize("filename, failed, passed, skipped, warnings_", [
-    ('worldcereal_inference2.json', 0, 1, 0, 0)
+    ('worldcereal_inference2.json', 0, 2, 0, 0)
 ])
 def test_ets(filename, failed, passed, skipped, warnings_):
     """Simple tests for a passing record"""

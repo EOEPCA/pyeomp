@@ -21,6 +21,7 @@
 
 import json
 import logging
+import requests
 import uuid
 
 from jsonschema import FormatChecker
@@ -104,15 +105,38 @@ class EOMPTestSuite:
 
         return ets_report
 
+    def test_requirement_stac_extensions(self):
+        """
+        Validate that an EOMP record's STAC extensions is valid
+        to the authoritative schema.
+        """
+
+        status = {
+            'id': gen_test_id('stac_extensions'),
+            'code': 'PASSED'
+        }
+
+        for stac_extension in self.record['stac_extensions']:
+            LOGGER.debug(f'Validating against STAC Extension {stac_extension}')
+            stac_extension_schema = requests.get(stac_extension)
+            stac_extension_schema.raise_for_status()
+
+            validation_errors = validate_json(
+                stac_extension_schema.json(), self.record)
+
+            if validation_errors:
+                status['code'] = 'FAILED'
+                status['message'] = f'{len(validation_errors)} error(s)'
+                status['errors'] = validation_errors
+
+        return status
+
     def test_requirement_validation(self):
         """
         Validate that an EOMP record is valid to the authoritative schema.
         """
 
         validation_errors = []
-
-        format_checkers = ['date-time', 'email', 'regex',
-                           'uri', 'uri-reference']
 
         status = {
             'id': gen_test_id('validation'),
@@ -128,14 +152,7 @@ class EOMPTestSuite:
 
         with schema.open() as fh:
             LOGGER.debug(f'Validating {self.record} against {schema}')
-            validator = Draft202012Validator(
-                json.load(fh),
-                format_checker=FormatChecker(formats=format_checkers)
-            )
-
-            for error in validator.iter_errors(self.record):
-                LOGGER.debug(f'{error.json_path}: {error.message}')
-                validation_errors.append(f'{error.json_path}: {error.message}')
+            validation_errors = validate_json(json.load(fh), self.record)
 
             if validation_errors:
                 status['code'] = 'FAILED'
@@ -153,3 +170,30 @@ class EOMPTestSuite:
 
         if len(self.errors) > 0:
             raise TestSuiteError('Invalid EOMP record', self.errors)
+
+
+def validate_json(schema: dict, instance: dict) -> list:
+    """
+    Helper function to validate JSON against a JSON Schema
+
+    :param schema: `dict` of JSON Schema
+    :paran instance: `dict` of request instance
+
+    :returns: `list` of validation errors
+    """
+
+    format_checkers = ['date-time', 'email', 'regex',
+                       'uri', 'uri-reference']
+
+    validation_errors = []
+    LOGGER.debug('Validating input against schema')
+    LOGGER.debug(f'Input: {instance}')
+    LOGGER.debug(f'Schema: {schema}')
+    validator = Draft202012Validator(
+        schema, format_checker=FormatChecker(formats=format_checkers))
+
+    for error in validator.iter_errors(instance):
+        LOGGER.debug(f'{error.json_path}: {error.message}')
+        validation_errors.append(f'{error.json_path}: {error.message}')
+
+    return validation_errors
