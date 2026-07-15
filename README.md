@@ -52,28 +52,39 @@ pyeomp bundle sync
 # abstract test suite
 
 # validate EOMP metadata against specification/schema (file on disk)
-pyeomp record validate /path/to/file.json
+pyeomp record ets validate /path/to/file.json
 
 # validate EOMP metadata against specification/schema (URL)
-pyeomp record validate https://example.org/path/to/file.json
+pyeomp record ets validate https://example.org/path/to/file.json
 
 # adjust debugging messages (CRITICAL, ERROR, WARNING, INFO, DEBUG) to stdout
-pyeomp record validate https://example.org/path/to/file.json --verbosity DEBUG
+pyeomp record ets validate https://example.org/path/to/file.json --verbosity DEBUG
 
 # write results to logfile
-pyeomp record validate https://example.org/path/to/file.json --verbosity DEBUG --logfile /tmp/foo.txt
+pyeomp record ets validate https://example.org/path/to/file.json --verbosity DEBUG --logfile /tmp/foo.txt
+
+# key performance indicators
+
+# all key performance indicators at once
+pyeomp record kpi validate https://example.org/path/to/file.json --verbosity DEBUG
+
+# all key performance indicators at once, in summary
+pyeomp record kpi validate https://example.org/path/to/file.json --verbosity DEBUG --summary
+
+# selected key performance indicator
+pyeomp record kpi validate --kpi title /path/to/file.json -v INFO
 ```
 
 ## Using the API
 ```pycon
 >>> # test a file on disk
 >>> import json
->>> from pyeomp.eomp.ets import EOMPTestSuite
+>>> from pyeomp.eomp.ets import EOMPETS
 >>> from pyeomp.errors import TestSuiteError
 >>> with open('/path/to/file.json') as fh:
 ...     data = json.load(fh)
 >>> # test ETS
->>> ts = EOMPTestSuite(data)
+>>> ts = EOMPETS(data)
 >>> ts.run_tests()
 >>> ts.raise_for_status()  # raises pyeomp.errors.TestSuiteError on exception with list of errors captured in .errors property
 >>> # test a URL
@@ -81,9 +92,14 @@ pyeomp record validate https://example.org/path/to/file.json --verbosity DEBUG -
 >>> from StringIO import StringIO
 >>> content = StringIO(urlopen('https://....').read())
 >>> data = json.loads(content)
->>> ts = EOMPTestSuite(data)
+>>> ts = EOMPETS(data)
 >>> ts.run_tests()
 >>> ts.raise_for_status()  # raises pyeomp.errors.TestSuiteError on exception with list of errors captured in .errors property
+>>> # test KPI
+>>> from pyeomp.eomp.kpi import EOMPKPI
+>>> kpis = EOMPKPI(data)
+>>> results = kpis.evaluate()
+>>> results['summary']
 ```
 
 ## Development

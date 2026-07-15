@@ -46,14 +46,14 @@ def gen_test_id(test_id: str) -> str:
     return f'http://eoepca.org/spec/eomp/1/conf/core/{test_id}'
 
 
-class EOMPTestSuite:
+class EOMPETS:
     def __init__(self, record):
         """
         initializer
 
         :param data: dict of EOMP JSON
 
-        :returns: `pyeomp.eomp.ets.EOMPTestSuite`
+        :returns: `pyeomp.eomp.ets.EOMPETS`
         """
 
         self.version = get_package_version()
@@ -77,8 +77,8 @@ class EOMPTestSuite:
             'generated_by': f'pyeomp {self.version} (https://github.com/EOEPCA/pyeomp)'  # noqa
         }
 
-        for f in dir(EOMPTestSuite):
-            if all([callable(getattr(EOMPTestSuite, f)),
+        for f in dir(EOMPETS):
+            if all([callable(getattr(EOMPETS, f)),
                     f.startswith('test_requirement'),
                     not f.endswith('validation')]):
                 tests.append(f)

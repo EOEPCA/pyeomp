@@ -32,6 +32,7 @@ classifiers = [
 dependencies = [
     "click",
     "jsonschema",
+    "pyspellchecker",
     "rfc3339-validator",
     "rfc3987",
     "requests",

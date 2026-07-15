@@ -32,16 +32,22 @@
 #
 # 2. add the processes to the pygeoapi configuration as follows:
 #
-# pyeomp-record-validate:
+# pyeomp-record-ets-validate:
 #     type: process
 #     processor:
 #         name: pyeomp.pygeoapi_plugin.EOMPETSProcessor
+#
+# pyeomp-record-kpi-validate:
+#     type: process
+#     processor:
+#         name: pyeomp.pygeoapi_plugin.EOMPKPIProcessor
 #
 # 3. (re)start pygeoapi
 #
 # The resulting processes will be available at the following endpoints:
 #
-# /processes/pyeomp-record-validate
+# /processes/pyeomp-record-ets-validate
+# /processes/pyeomp-record-kpi-validate
 #
 # Note that pygeoapi's OpenAPI/Swagger interface (at /openapi) will also
 # provide a developer-friendly interface to test and run requests
@@ -52,7 +58,8 @@ import logging
 
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
-from pyeomp.eomp.ets import EOMPTestSuite
+from pyeomp.eomp.ets import EOMPETS
+from pyeomp.eomp.kpi import EOMPKPI
 from pyeomp.util import get_package_version, THISDIR, urlopen_
 
 LOGGER = logging.getLogger(__name__)
@@ -60,15 +67,18 @@ LOGGER = logging.getLogger(__name__)
 with (THISDIR / 'resources' / 'ets-report.json').open() as fh:
     ETS_REPORT_SCHEMA = json.load(fh)
 
+with (THISDIR / 'resources' / 'kpi-report.json').open() as fh:
+    KPI_REPORT_SCHEMA = json.load(fh)
+
 with (THISDIR / 'resources' / 'worldcereal_inference2.json').open() as fh:
     EXAMPLE_EOMP = json.load(fh)
 
 
 PROCESS_EOMP_ETS = {
     'version': get_package_version(),
-    'id': 'pyeomp-record-validate',
+    'id': 'pyeomp-record-ets-validate',
     'title': {
-        'en': 'EOMP record validator'
+        'en': 'EOMP record ETS validator'
     },
     'description': {
         'en': 'Validate a EOMP record against the ETS'
@@ -113,6 +123,55 @@ PROCESS_EOMP_ETS = {
 }
 
 
+PROCESS_EOMP_KPI = {
+    'version': get_package_version(),
+    'id': 'pyeomp-record-kpi-validate',
+    'title': {
+        'en': 'EOMP record KPI validator'
+    },
+    'description': {
+        'en': 'Validate a EOMP record against the KPI'
+    },
+    'keywords': ['eoepca', 'eomp', 'kpi', 'test suite', 'metadata'],
+    'links': [{
+        'type': 'text/html',
+        'rel': 'about',
+        'title': 'information',
+        'href': 'https://github.com/EOEPCA/eomp',
+        'hreflang': 'en-US'
+    }],
+    'jobControlOptions': ['sync-execute', 'async-execute'],
+    'inputs': {
+        'record': {
+            'title': 'EOMP record',
+            'description': 'EOMP record (can be inline or remote link)',
+            'schema': {
+                'type': ['object', 'string']
+            },
+            'minOccurs': 1,
+            'maxOccurs': 1,
+            'metadata': None,
+            'keywords': ['eomp']
+        }
+    },
+    'outputs': {
+        'result': {
+            'title': 'Report of KPI results',
+            'description': 'Report of KPI results',
+            'schema': {
+                'contentMediaType': 'application/json',
+                **KPI_REPORT_SCHEMA
+            }
+        }
+    },
+    'example': {
+        'inputs': {
+            'record': EXAMPLE_EOMP
+        }
+    }
+}
+
+
 class EOMPETSProcessor(BaseProcessor):
     """EOMP ETS"""
 
@@ -145,7 +204,48 @@ class EOMPETSProcessor(BaseProcessor):
             LOGGER.debug('Record is inline')
 
         LOGGER.debug('Running ETS against record')
-        response = EOMPTestSuite(record).run_tests()
+        response = EOMPETS(record).run_tests()
+
+        return mimetype, response
+
+    def __repr__(self):
+        return '<EOMPETSProcessor>'
+
+
+class EOMPKPIProcessor(BaseProcessor):
+    """EOMP KPI"""
+
+    def __init__(self, processor_def):
+        """
+        Initialize object
+
+        :param processor_def: provider definition
+
+        :returns: pyeomp.pygeoapi_plugin.EOMPKPIProcessor
+        """
+
+        super().__init__(processor_def, PROCESS_EOMP_KPI)
+
+    def execute(self, data, outputs=None):
+
+        response = None
+        mimetype = 'application/json'
+        record = data.get('record')
+
+        if record is None:
+            msg = 'Missing record'
+            LOGGER.error(msg)
+            raise ProcessorExecuteError(msg)
+
+        if isinstance(record, str) and record.startswith('http'):
+            LOGGER.debug('Record is a link')
+            record = json.loads(urlopen_(record).read())
+        else:
+            LOGGER.debug('Record is inline')
+
+        LOGGER.debug('Running KPI against record')
+        kpis = EOMPKPI(record)
+        response = kpis.evaluate()
 
         return mimetype, response
 

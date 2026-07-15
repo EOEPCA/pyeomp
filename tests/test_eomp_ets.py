@@ -23,7 +23,7 @@ import json
 
 import pytest
 
-from pyeomp.eomp.ets import EOMPTestSuite
+from pyeomp.eomp.ets import EOMPETS
 
 from .util import get_test_file_path
 
@@ -37,7 +37,7 @@ def test_ets(filename, failed, passed, skipped, warnings_):
     with get_test_file_path(filename).open() as fh:
         data = json.load(fh)
 
-    ts = EOMPTestSuite(data)
+    ts = EOMPETS(data)
     results = ts.run_tests()
 
     assert results['report_type'] == 'ets'

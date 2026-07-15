@@ -26,11 +26,85 @@ import logging
 from pathlib import Path
 import ssl
 from urllib.error import URLError
+from urllib.parse import urlparse
 from urllib.request import urlopen
+
+from spellchecker import SpellChecker
 
 LOGGER = logging.getLogger(__name__)
 
 THISDIR = Path(__file__).parent.resolve()
+
+
+def check_spelling(text: str) -> list:
+    """
+    Helper function to spell check a string
+
+    :returns: `list` of unknown / misspelled words
+    """
+
+    LOGGER.debug(f'Spellchecking {text}')
+    spell = SpellChecker()
+
+    dictionary = THISDIR / 'resources' / 'dictionary.txt'
+    LOGGER.debug(f'Loading custom dictionary {dictionary}')
+    spell.word_frequency.load_text_file(f'{dictionary}')
+
+    return list(spell.unknown(spell.split_words(text)))
+
+
+def check_url(url: str, check_ssl: bool, timeout: int = 30) -> dict:
+    """
+    Helper function to check link (URL) accessibility
+
+    :param url: The URL to check
+    :param check_ssl: Whether the SSL/TLS layer verification shall be made
+    :param timeout: timeout, in seconds (default: 30)
+
+    :returns: `dict` with details about the link
+    """
+
+    response = None
+    result = {
+        'mime-type': None,
+        'url-original': url
+    }
+
+    try:
+        if not check_ssl:
+            LOGGER.debug(f'Creating unverified context for "{url}"')
+            result['ssl'] = False
+            context = ssl._create_unverified_context()
+            response = urlopen(url, context=context, timeout=timeout)
+        else:
+            response = urlopen(url, timeout=timeout)
+    except TimeoutError as err:
+        LOGGER.debug(f'Timeout error: {err} at "{url}"')
+    except (ssl.SSLError, URLError, ValueError) as err:
+        LOGGER.debug(f'SSL/URL error: {err} at "{url}"')
+        LOGGER.debug(err)
+    except Exception as err:
+        LOGGER.debug(f'Other error: {err} at "{url}"')
+        LOGGER.debug(err)
+
+    if response is None and check_ssl:
+        return check_url(url, False)
+
+    if response is not None:
+        result['url-resolved'] = response.url
+        parsed_uri = urlparse(response.url)
+        if parsed_uri.scheme in ('http', 'https'):
+            if response.status > 300:
+                LOGGER.debug(f'Request failed at "{url}": {response}')
+            result['accessible'] = response.status < 300
+            result['mime-type'] = response.headers.get_content_type()
+        else:
+            result['accessible'] = True
+        if parsed_uri.scheme in ('https') and check_ssl:
+            result['ssl'] = True
+    else:
+        result['accessible'] = False
+    return result
 
 
 def get_current_datetime_rfc3339() -> str:
