@@ -81,7 +81,7 @@ PROCESS_EOMP_ETS = {
         'en': 'EOMP record ETS validator'
     },
     'description': {
-        'en': 'Validate a EOMP record against the ETS'
+        'en': 'Validate an EOMP record against the ETS'
     },
     'keywords': ['eoepca', 'eomp', 'ets', 'test suite', 'metadata'],
     'links': [{
@@ -130,7 +130,7 @@ PROCESS_EOMP_KPI = {
         'en': 'EOMP record KPI validator'
     },
     'description': {
-        'en': 'Validate a EOMP record against the KPI'
+        'en': 'Validate an EOMP record against the KPI'
     },
     'keywords': ['eoepca', 'eomp', 'kpi', 'test suite', 'metadata'],
     'links': [{
