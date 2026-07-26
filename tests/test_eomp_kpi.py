@@ -46,4 +46,3 @@ def test_kpi(filename, score, grade):
 
     assert results['summary']['score'] == score
     assert results['summary']['grade'] == grade
-

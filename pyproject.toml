@@ -30,6 +30,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: GIS"
 ]
 dependencies = [
+    "beautifulsoup4",
     "click",
     "jsonschema",
     "pyspellchecker",
