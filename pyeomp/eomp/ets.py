@@ -193,7 +193,8 @@ def validate_json(schema: dict, instance: dict) -> list:
         schema, format_checker=FormatChecker(formats=format_checkers))
 
     for error in validator.iter_errors(instance):
-        LOGGER.debug(f'{error.json_path}: {error.message}')
-        validation_errors.append(f'{error.json_path}: {error.message}')
+        msg = f'{error.json_path}: {error.message}'
+        LOGGER.debug(msg)
+        validation_errors.append(msg)
 
     return validation_errors
