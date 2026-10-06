@@ -29,6 +29,8 @@ from .util import get_test_file_path
 
 
 @pytest.mark.parametrize("filename, failed, passed, skipped, warnings_", [
+    ('esa-cci-permafrost-experiment.json', 0, 2, 0, 0),
+    ('esa-cci-permafrost-workflow.json', 0, 2, 0, 0),
     ('worldcereal_inference2.json', 0, 2, 0, 0)
 ])
 def test_ets(filename, failed, passed, skipped, warnings_):

@@ -55,11 +55,17 @@ def sync(ctx, verbosity):
     LOGGER.debug('Caching schema')
     LOGGER.debug(f'Downloading EOMP schema to {EOMP_FILES_TEMP}')
     EOMP_FILES_TEMP.mkdir(parents=True, exist_ok=True)
-    EOMP_SCHEMA = 'https://raw.githubusercontent.com/EOEPCA/eomp/refs/heads/master/schemas/eomp-bundled.json'  # noqa
+    EOMP_SCHEMAS = [
+        'https://raw.githubusercontent.com/EOEPCA/eomp/refs/heads/master/schemas/eomp-bundled.json',  # noqa
+        'https://raw.githubusercontent.com/EOEPCA/eomp/refs/heads/master/schemas/eomp-workflow-bundled.json',  # noqa
+        'https://raw.githubusercontent.com/EOEPCA/eomp/refs/heads/master/schemas/eomp-experiment-bundled.json'  # noqa
+    ]
 
-    json_schema = EOMP_FILES_TEMP / 'eomp-bundled.json'
-    with json_schema.open('wb') as fh:
-        fh.write(urlopen_(f'{EOMP_SCHEMA}').read())
+    for eomp_schema in EOMP_SCHEMAS:
+        filename = Path(eomp_schema).name
+        json_schema = EOMP_FILES_TEMP / filename
+        with json_schema.open('wb') as fh:
+            fh.write(urlopen_(eomp_schema).read())
 
     LOGGER.debug(f'Removing {USERDIR}')
     if USERDIR.exists():

@@ -33,6 +33,12 @@ from pyeomp.util import get_current_datetime_rfc3339, get_package_version
 
 LOGGER = logging.getLogger(__name__)
 
+SCHEMAS = {
+    'workflow': 'eomp-workflow-bundled.json',
+    'experiment': 'eomp-experiment-bundled.json',
+    'core': 'eomp-bundled.json'
+}
+
 
 def gen_test_id(test_id: str) -> str:
     """
@@ -136,6 +142,7 @@ class EOMPETS:
         Validate that an EOMP record is valid to the authoritative schema.
         """
 
+        schema = None
         validation_errors = []
 
         status = {
@@ -143,7 +150,20 @@ class EOMPETS:
             'code': 'PASSED'
         }
 
-        schema = EOMP_FILES / 'eomp-bundled.json'
+        for key, value in SCHEMAS.items():
+            conformance_uri = f'http://eoepca.org/spec/eomp/1/conf/{key}'
+            if conformance_uri in self.record.get('conformsTo', []):
+                schema = EOMP_FILES / value
+                break
+
+        schema = EOMP_FILES / SCHEMAS['core']
+
+        if schema is None:
+            msg = 'Unsupport schema'
+            LOGGER.error(msg)
+            raise RuntimeError(msg)
+
+        LOGGER.debug(f'Validating against schema {schema}')
 
         if not schema.exists():
             msg = "EOMP schema missing. Run 'pyeomp bundle sync' to cache"
