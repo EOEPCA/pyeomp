@@ -40,18 +40,6 @@ SCHEMAS = {
 }
 
 
-def gen_test_id(test_id: str) -> str:
-    """
-    Convenience function to print test identifier as URI
-
-    :param test_id: test suite identifier
-
-    :returns: test identifier as URI
-    """
-
-    return f'http://eoepca.org/spec/eomp/1/conf/core/{test_id}'
-
-
 class EOMPETS:
     def __init__(self, record):
         """
@@ -65,6 +53,19 @@ class EOMPETS:
         self.version = get_package_version()
         self.errors = []
         self.record = record
+        self.test_uri_prefix = 'http://eoepca.org/spec/eomp/1/conf'
+        self.conformance_class_id = 'core'
+
+    def gen_test_id(self, test_id: str) -> str:
+        """
+        Convenience function to print test identifier as URI
+
+        :param test_id: test suite identifier
+
+        :returns: test identifier as URI
+        """
+
+        return f'{self.test_uri_prefix}/{self.conformance_class_id}/{test_id}'
 
     def run_tests(self):
 
@@ -118,7 +119,7 @@ class EOMPETS:
         """
 
         status = {
-            'id': gen_test_id('stac_extensions'),
+            'id': self.gen_test_id('stac_extensions'),
             'code': 'PASSED'
         }
 
@@ -146,7 +147,6 @@ class EOMPETS:
         validation_errors = []
 
         status = {
-            'id': gen_test_id('validation'),
             'code': 'PASSED'
         }
 
@@ -154,9 +154,10 @@ class EOMPETS:
             conformance_uri = f'http://eoepca.org/spec/eomp/1/conf/{key}'
             if conformance_uri in self.record.get('conformsTo', []):
                 schema = EOMP_FILES / value
+                self.conformance_class_id = key
                 break
 
-        schema = EOMP_FILES / SCHEMAS['core']
+        status['id'] = self.gen_test_id('validation')
 
         if schema is None:
             msg = 'Unsupport schema'
