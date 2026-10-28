@@ -291,7 +291,7 @@ class EOMPKPI:
                 'href': theme.get('scheme')
             })
 
-        for contact in self.data['properties']['contacts']:
+        for contact in self.data['properties'].get('contacts', []):
             for link in contact.get('links', []):
                 links.append({
                     'href': link['href']

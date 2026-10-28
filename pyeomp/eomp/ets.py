@@ -160,7 +160,7 @@ class EOMPETS:
         status['id'] = self.gen_test_id('validation')
 
         if schema is None:
-            msg = 'Unsupport schema'
+            msg = 'Unsupported schema'
             LOGGER.error(msg)
             raise RuntimeError(msg)
 
